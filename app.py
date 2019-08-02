@@ -51,7 +51,6 @@ class SpiderThread(threading.Thread):
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.jinja_env.auto_reload = True
-app.config["DEBUG"] = True
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = timedelta(seconds=1)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///words.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -392,4 +391,4 @@ def favicon():
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port = 33507)
