@@ -1,0 +1,17 @@
+*{
+    font-family: monospace;
+}
+button{
+    margin: 5px;
+}
+.title{
+    margin-top: 5px;
+    font-size: 28px;
+    text-align: center;
+}
+.msg{
+    margin: 10px;
+}
+#info{
+    margin: 10px;
+}

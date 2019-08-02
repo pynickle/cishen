@@ -1,0 +1,23 @@
+h1{
+    font-size: 26px;
+    text-align: center;
+    margin: 10px;
+}
+p{
+    margin: 10px;
+}
+input{
+    margin: 10px;
+}
+.youdict{
+    float:left;
+    margin: 10px;
+}
+.hujiang{
+    float:left;
+    margin: 10px;
+}
+.spider-progress{
+    margin: 10px;
+    width: 50%;
+}
