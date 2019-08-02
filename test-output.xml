@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuite errors="0" failures="0" name="pytest" skipped="0" tests="1" time="0.777"><testcase classname="test_flask" file="test_flask.py" line="21" name="test_empty_db" time="0.057"></testcase></testsuite>
