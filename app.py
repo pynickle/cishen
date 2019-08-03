@@ -92,7 +92,7 @@ class WrongWords(db.Model):
         self.english = english
         self.chinese = chinese
 
-
+@app.before_app
 db.create_all()
 db.create_all(bind = "wrongwords")
 
