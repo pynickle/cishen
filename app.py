@@ -3,7 +3,8 @@ import difflib
 import os
 
 from flask import Flask, render_template, request, flash, redirect,\
-                  get_flashed_messages, session, jsonify, url_for, send_from_directory
+                  get_flashed_messages, session, jsonify, url_for,\
+                  send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug import secure_filename
 import threading
@@ -18,8 +19,11 @@ def youdict_spider(threadName, q):
     words = youdict(threadName, q)
     for i in words:
         word = Words(i[0], i[1])
-        db.session.add(word)
-        db.session.commit()
+        try:
+            db.session.add(word)
+            db.session.commit()
+        except:
+            pass
 
 def hujiang_spider(threadName, q):
     words = hujiang(threadName, q)
@@ -62,15 +66,6 @@ app.config.update(
     CELERY_RESULT_BACKEND='redis://localhost:6379'
 )
 
-
-@app.before_first_request
-def before_first_request():
-    global choice, failure, is_failure
-    choice = 0
-    failure = []
-    is_failure = False
-
-
 db = SQLAlchemy(app)
 
 class Words(db.Model):
@@ -92,9 +87,16 @@ class WrongWords(db.Model):
         self.english = english
         self.chinese = chinese
 
-@app.before_app
-db.create_all()
-db.create_all(bind = "wrongwords")
+
+@app.before_first_request
+def before_first_request():
+    global choice, failure, is_failure
+    global db
+    choice = 0
+    failure = []
+    is_failure = False
+    db.create_all()
+    db.create_all(bind = "wrongwords")
 
 
 @app.route("/")
