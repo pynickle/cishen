@@ -1,13 +1,18 @@
 words.sqlite3
 wrongwords.sqlite3
 
-.idea/
-.pytest_cache/
 *.pyc
 
+.idea/
+.pytest_cache/
 test-output.xml
+
 spider_all.py
+sort.py
+
 youdict_liuji(origin).txt
 youdict_siji(origin).txt
-sort.py
+
 application.wsgi
+
+app.zip
