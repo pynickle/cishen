@@ -1,17 +1,21 @@
-*{
+* {
     font-family: monospace;
 }
-button{
+
+button {
     margin: 5px;
 }
-.title{
+
+.title {
     margin-top: 5px;
     font-size: 28px;
     text-align: center;
 }
-.msg{
+
+.msg {
     margin: 10px;
 }
-#info{
+
+#info {
     margin: 10px;
 }

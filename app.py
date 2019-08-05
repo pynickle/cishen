@@ -4,13 +4,14 @@ import os
 
 from flask import Flask, render_template, request, flash, redirect,\
                   get_flashed_messages, session, jsonify, url_for,\
-                  send_from_directory
+                  send_from_directory, current_app
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug import secure_filename
 import threading
 import queue
+import requests
 
-from forms import HandForm, SpiderForm
+from forms import SpiderForm
 from validate import words_validate
 from spider import youdict, hujiang
 
@@ -92,9 +93,11 @@ class WrongWords(db.Model):
 def before_first_request():
     global choice, failure, is_failure
     global db
+    session.permanent = True
     choice = 0
     failure = []
     is_failure = False
+    session["recite-progress"] = 0
     db.create_all()
     db.create_all(bind = "wrongwords")
 
@@ -128,11 +131,10 @@ def see():
 
 @app.route("/add-new-word", methods=["GET", "POST"])
 def new():
-    form = HandForm()
     if request.method == "GET":
         return render_template("add-new-word/new.html")
     else:
-        success, errors = words_validate(form.words.data)
+        success, errors = words_validate(request.form.get("words"))
         for data in success:
             word = Words(data[0], data[1])
             db.session.add(word)
@@ -143,6 +145,7 @@ def new():
 @app.route("/recite-words", methods=["GET", "POST"])
 def recite():
     global choice, failure, is_failure
+    choice = session.get("recite-progress")
     if request.method == "GET":
         words = []
         for i in Words.query.all():
@@ -186,6 +189,7 @@ def recite():
                 "words_count") else session.get("words_count")
             lst_choice = words_count if not is_failure else len(failure)
             if choice >= len(words) or choice >= lst_choice:
+                session["recite-progress"] = choice
                 choice = 0
                 if not failure:
                     choice = 0
@@ -353,10 +357,23 @@ def youdict_spider_post(website):
     
     return redirect("/see-words")
 
+@app.route("/word-books")
+def word_books():
+    return render_template("word-books/books.html")
+
+@app.route("/word-books/download/<name>", methods = ["GET", "POST"])
+def word_books_download(name):
+    if name == "youdict":
+        f = open("./static/word-books/youdict_siji.txt", "r", encoding="utf-8").read()
+        url = url_for("new", _external=True)
+        requests.post(url, data = {"words": f})
+        return redirect("/see-words")
+    else:
+        pass
+
 @app.route("/add-new-word/hand")
 def hand():
-    form = HandForm()
-    return render_template("add-new-word/hand.html", form=form)
+    return render_template("add-new-word/hand.html")
 
 
 @app.route("/add-new-word/file", methods=["GET", "POST"])
@@ -368,6 +385,7 @@ def file():
             f.save(filename)
             with open(filename, "r", encoding="utf-8") as f:
                 success, errors = words_validate(f.read())
+            os.remove(filename)
             for data in success:
                 word = Words(data[0], data[1], data[2])
                 db.session.add(word)
@@ -393,4 +411,4 @@ def favicon():
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
-    app.run(port = 33507)
+    app.run(port = 33507, debug = True)
