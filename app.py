@@ -403,6 +403,10 @@ def file():
 def four_zero_four(exception):
     return render_template("404.html", exception=exception)
 
+@app.errorhandler(500)
+def five_zero_zero(exception):
+    return render_template("500.html")
+
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
