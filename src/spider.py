@@ -43,12 +43,5 @@ def hujiang(threadName, q):
         time.sleep(1 + random.random())
     return res
 
-def generate_txt(res, filename):
-    if os.path.exists(filename):
-        os.remove(filename)
-    for i in res:
-        with open(filename, "a", encoding="utf-8") as f:
-            f.write(i[0], i[1], "\n")
-
 if __name__ == "__main__":
     main()

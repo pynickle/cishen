@@ -11,10 +11,7 @@ import threading
 import queue
 import requests
 
-from forms import SpiderForm
-from validate import words_validate
-from spider import youdict, hujiang
-
+from src import SpiderForm, youdict, hujiang, words_validate
 
 def youdict_spider(threadName, q):
     words = youdict(threadName, q)
