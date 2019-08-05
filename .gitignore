@@ -9,3 +9,5 @@ test-output.xml
 spider_all.py
 youdict_liuji(origin).txt
 youdict_siji(origin).txt
+sort.py
+application.wsgi
