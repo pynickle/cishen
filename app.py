@@ -145,6 +145,9 @@ def new():
 @app.route("/recite-words", methods=["GET", "POST"])
 def recite():
     global choice, failure, is_failure
+    recite_progress = session.get("recite-progress")
+    if not recite_progress:
+        session["recite-progress"] = 0
     choice = session.get("recite-progress")
     if request.method == "GET":
         words = []
@@ -363,13 +366,11 @@ def word_books():
 
 @app.route("/word-books/download/<name>", methods = ["GET", "POST"])
 def word_books_download(name):
-    if name == "youdict":
-        f = open("./static/word-books/youdict_siji.txt", "r", encoding="utf-8").read()
-        url = url_for("new", _external=True)
-        requests.post(url, data = {"words": f})
-        return redirect("/see-words")
-    else:
-        pass
+    file = "./static/word-books/" + name + ".txt"
+    f = open(file, "r", encoding="utf-8").read()
+    url = url_for("new", _external=True)
+    requests.post(url, data = {"words": f})
+    return redirect("/see-words")
 
 @app.route("/add-new-word/hand")
 def hand():
