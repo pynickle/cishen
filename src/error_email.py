@@ -9,7 +9,7 @@ def mail(exception):
     
     msg = ""
     msg += "<p>Exception happened when others using your cishen application:</p>"
-    msg += "<pre><code>" + exception + "</code></pre>"
+    msg += "<pre><code>" + str(exception) + "</code></pre>"
 
     message = MIMEText(msg, 'html', 'utf-8')
     message['From'] = sender
@@ -26,7 +26,7 @@ def mail(exception):
         smtp.quit()
         return True
     except Exception as e:
-        traceback.print_exc()
+        # traceback.print_exc()
         return False
 
 if __name__ == "__main__":

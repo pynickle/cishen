@@ -202,8 +202,8 @@ def new():
         return redirect("see-words")
 
 
-@app.route("/recite-words/<set>", methods=["GET", "POST"])
-def recite(set):
+@app.route("/recite-words", methods=["GET", "POST"])
+def recite():
     """
     Usage::
 
@@ -212,11 +212,6 @@ def recite(set):
     """
     global choice, failure, is_failure
 
-    if set == "words":
-        words_set = Words
-    elif set == "wrongwords":
-        words_set = WrongWords
-
     if request.method == "GET":
         recite_progress = session.get("recite-progress")
         if not recite_progress:
@@ -224,7 +219,7 @@ def recite(set):
         choice = session.get("recite-progress")
         words = []
 
-        for i in words_set.query.all():
+        for i in Words.query.all():
             words.append(i)
         if words:
             return render_template(
@@ -234,7 +229,7 @@ def recite(set):
             return redirect("/")
     else:
         words = []
-        for i in words_set.query.all():
+        for i in Words.query.all():
             words.append(i)
         data = request.form.get("data")
         form_failure = request.form.get("is-failure")
@@ -281,9 +276,8 @@ def recite(set):
                     return redirect("/")
                 else:
                     for i in failure:
-                        if set == Words:
-                            wrongwords = WrongWords(i.english, i.chinese)
-                        db.session.add(wrongwords)
+                        wrongwords = WrongWords(i.english, i.chinese)
+                    db.session.add(wrongwords)
                     db.session.commit()
                     is_failure = True
                     return render_template(
@@ -340,16 +334,6 @@ def wrong_words():
     else:
         return render_template("wrong-words/wrong.html",
                                words=WrongWords.query.all())
-
-
-@app.route("/wrong-words/recite", methods=["GET", "POST"])
-def wrong_words_recite():
-    """
-    Usage::
-
-        The recite page for wrong words. The same as recite words page.
-    """
-    return redirect("/recite-words/recite/wrongwords")
 
 
 @app.route("/settings", methods=["GET", "POST"])
@@ -502,7 +486,7 @@ def four_zero_four(exception):
 
         The 404 page for this flask application.
     """
-    return render_template("404.html", exception=exception)
+    return render_template("error-handler/404.html", exception=exception)
 
 
 @app.errorhandler(500)
@@ -513,7 +497,7 @@ def five_zero_zero(exception):
         The 500 page for this flask application.
     """
     mail(exception)
-    return render_template("500.html")
+    return render_template("error-handler/500.html")
 
 
 @app.route('/favicon.ico')
@@ -528,4 +512,4 @@ def favicon():
 
 
 if __name__ == '__main__':
-    app.run(port=33507)
+    app.run(port=33507, debug = True)
