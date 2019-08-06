@@ -19,8 +19,6 @@ def youdict_spider(threadName, q):
     :param threadName: thread name of threading module
     :param q: Queue object of queue
 
-    :return: None
-
     Usage::
 
         get youdict words and store them in the sqlalchemy database
@@ -40,8 +38,6 @@ def hujiang_spider(threadName, q):
     :param threadName: thread name of threading module
     :param q: Queue object of queue module
     
-    :return: None
-
     Usage::
 
         get hujiang words and store them in the sqlalchemy database
@@ -61,8 +57,6 @@ class SpiderThread(threading.Thread):
 
     :method run:
 
-        :return: None
-        
         run the words scrapy program with threading and queue
     """
     def __init__(self, name, q, website):
@@ -131,8 +125,6 @@ class WrongWords(db.Model):
 @app.before_first_request
 def before_first_request():
     """
-    :return: None
-
     Usage::
 
         Before first request for the application, we need to
@@ -155,7 +147,6 @@ def before_first_request():
 @app.route("/")
 def main():
     """
-    :return: render_template("main.html")
     Usage::
 
         the index page for cishen application
@@ -166,9 +157,6 @@ def main():
 @app.route("/see-words", methods=["GET", "POST"])
 def see():
     """
-    :return post: redirect("/see-words")
-    :return post|get: render_template("see-words/see.html")
-
     Usage::
 
         The page for seeing all words in the databases. It can delete
@@ -198,9 +186,6 @@ def see():
 @app.route("/add-new-word", methods=["GET", "POST"])
 def new():
     """
-    :return get: render_template("add-new-word/new.html")
-    :return post: redirect("see-words")
-
     Usage::
 
         the page for href to use hand or file to add new words. Also accept
@@ -217,20 +202,20 @@ def new():
         return redirect("see-words")
 
 
-@app.route("/recite-words", methods=["GET", "POST"])
-def recite():
+@app.route("/recite-words/<set>", methods=["GET", "POST"])
+def recite(set):
     """
-    :return get: render_template("recite-words/recite.html")
-    :return get: redirect("/")
-    :return post: render_template("recite-words/result.html")
-    :return post: render_template("recite-words/recite.html")
-
     Usage::
 
         The page for recite words in the words database. Accept the first
         get and other post for data transmission.
     """
     global choice, failure, is_failure
+
+    if set == "words":
+        words_set = Words
+    elif set == "wrongwords":
+        words_set = WrongWords
 
     if request.method == "GET":
         recite_progress = session.get("recite-progress")
@@ -239,7 +224,7 @@ def recite():
         choice = session.get("recite-progress")
         words = []
 
-        for i in Words.query.all():
+        for i in words_set.query.all():
             words.append(i)
         if words:
             return render_template(
@@ -249,7 +234,7 @@ def recite():
             return redirect("/")
     else:
         words = []
-        for i in Words.query.all():
+        for i in words_set.query.all():
             words.append(i)
         data = request.form.get("data")
         form_failure = request.form.get("is-failure")
@@ -296,7 +281,8 @@ def recite():
                     return redirect("/")
                 else:
                     for i in failure:
-                        wrongwords = WrongWords(i.english, i.chinese)
+                        if set == Words:
+                            wrongwords = WrongWords(i.english, i.chinese)
                         db.session.add(wrongwords)
                     db.session.commit()
                     is_failure = True
@@ -309,9 +295,6 @@ def recite():
 @app.route("/search-words", methods=["GET", "POST"])
 def search():
     """
-    :return get: render_template("search-words/search.html")
-    :return post: render_template("search-words/result.html")
-
     Usage::
 
         The page for search words from words database. Accept get and post of 
@@ -332,9 +315,6 @@ def search():
 @app.route("/wrong-words", methods=["GET", "POST"])
 def wrong_words():
     """
-    :return post: redirect("/wrong-words")
-    :return get|post: render_template("wrong-words/wrong.html")
-
     Usage::
 
         The page for show wrong words from wrongwords database. Accept get
@@ -365,86 +345,16 @@ def wrong_words():
 @app.route("/wrong-words/recite", methods=["GET", "POST"])
 def wrong_words_recite():
     """
-    :return get: render_template("wrong-words/recite.html")
-    :return get: redirect("/")
-    :return post: render_template("wrong-words/result.html")
-    :return post: render_template("wrong-words/recite.html")
-
     Usage::
 
         The recite page for wrong words. The same as recite words page.
     """
-    global choice, failure, is_failure
-    if request.method == "GET":
-        recite_progress = session.get("recite-progress")
-        if not recite_progress:
-            session["recite-progress"] = 0
-        choice = session.get("recite-progress")
-        words = []
-        for i in WrongWords.query.all():
-            words.append(i)
-        if words:
-            return render_template(
-                "wrong-words/recite.html", words=words, choice=choice, failure=False)
-        else:
-            flash("请先添加单词！")
-            return redirect("/")
-    else:
-        words = []
-        for i in WrongWords.query.all():
-            words.append(i)
-        data = request.form.get("data")
-        form_failure = request.form.get("is-failure")
-        word = words[choice]
-        if is_failure:
-            is_failure = True
-            word = failure[choice]
-        if data:
-            if data.upper() == word.english.upper():
-                if form_failure:
-                    failure.remove(word)
-                return render_template(
-                    "wrong-words/result.html", data=data, word=word, status="答对咯！", failure=is_failure)
-            else:
-                failure.append(word)
-                return render_template(
-                    "wrong-words/result.html", data=data, word=word, status="答错了！", failure=is_failure)
-        else:
-            if form_failure:
-                is_failure = True
-                word = failure[choice]
-                failure.remove(word)
-                if not failure:
-                    choice = 0
-                    is_failure = False
-                    failure = []
-                    flash("复习完成！")
-                    return redirect("/")
-            choice += 1
-            words_count = 20 if not session.get(
-                "words_count") else session.get("words_count")
-            lst_choice = words_count if not is_failure else len(failure)
-            if choice >= len(words) or choice >= lst_choice:
-                choice = 0
-                if not failure:
-                    choice = 0
-                    is_failure = False
-                    failure = []
-                    flash("复习完成！")
-                    return redirect("/")
-                else:
-                    is_failure = True
-                    return render_template(
-                        "wrong-words/recite.html", words=failure, choice=choice, failure=True)
-            return render_template(
-                "wrong-words/recite.html", words=words, choice=choice)
+    return redirect("/recite-words/recite/wrongwords")
 
 
 @app.route("/settings", methods=["GET", "POST"])
 def settings():
     """
-    :return get|post: render_template("/settings/settings.html")
-
     Usage::
 
         The settings page. Settings contains the words count you want to recite
@@ -466,9 +376,6 @@ def settings():
 def youdict_spider_post(website):
     """
     :param website: the website name to scrapy
-
-    :return post: redirect("/settings")
-    :return post: redirect("/see-words")
 
     Usage::
 
@@ -500,7 +407,7 @@ def youdict_spider_post(website):
         elif website == "hujiang":
             url = f"https://www.hujiang.com/ciku/zuixinyingyudanci_{i}"
         link_list.append(url)
-    print(link_list)
+    # print(link_list)
 
     threadList = ["Thread-1", "Thread-2", "Thread-3", "Thread-4", "Thread-5"]
     workQueue = queue.Queue(2500)
@@ -523,8 +430,6 @@ def youdict_spider_post(website):
 @app.route("/word-books")
 def word_books():
     """
-    :return: render_template("word-books/books.html")
-
     Usage::
 
         The word books page. The word books is used for
@@ -537,8 +442,6 @@ def word_books():
 def word_books_download(name):
     """
     :param name: the name of the word book
-
-    :return post: redirect("/see-words")
 
     Usage::
 
@@ -555,7 +458,6 @@ def word_books_download(name):
 @app.route("/add-new-word/hand")
 def hand():
     """
-    :return: render_template("add-new-word/hand.html")
 
     Usage::
 
@@ -567,12 +469,6 @@ def hand():
 
 @app.route("/add-new-word/file", methods=["GET", "POST"])
 def file():
-    """
-    :return get: render_template("add-new-word/file.html")
-    :return post: render_template("see-words/see.html")
-    :return post: render_template("add-new-word/failure1.html")
-    :return post: render_template("add-new-word/failure2.html")
-    """
     if request.method == "POST":
         try:
             f = request.files['file']
@@ -602,8 +498,6 @@ def file():
 @app.errorhandler(404)
 def four_zero_four(exception):
     """
-    :return: render_template("404.html")
-
     Usage::
 
         The 404 page for this flask application.
@@ -614,8 +508,6 @@ def four_zero_four(exception):
 @app.errorhandler(500)
 def five_zero_zero(exception):
     """
-    :return: render_template("500.html")
-
     Usage::
 
         The 500 page for this flask application.
@@ -627,8 +519,6 @@ def five_zero_zero(exception):
 @app.route('/favicon.ico')
 def favicon():
     """
-    :return: favicon.ico
-
     Usage::
 
         The favicon for every page.
