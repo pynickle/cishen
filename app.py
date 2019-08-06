@@ -231,12 +231,12 @@ def recite():
         get and other post for data transmission.
     """
     global choice, failure, is_failure
-    recite_progress = session.get("recite-progress")
-    if not recite_progress:
-        session["recite-progress"] = 0
-    choice = session.get("recite-progress")
 
     if request.method == "GET":
+        recite_progress = session.get("recite-progress")
+        if not recite_progress:
+            session["recite-progress"] = 0
+        choice = session.get("recite-progress")
         words = []
 
         for i in Words.query.all():
@@ -259,7 +259,7 @@ def recite():
             is_failure = True
             word = failure[choice]
         if data:
-            if data == word.english:
+            if data.upper() == word.english.upper():
                 if form_failure:
                     failure.remove(word)
                 return render_template(
@@ -376,6 +376,10 @@ def wrong_words_recite():
     """
     global choice, failure, is_failure
     if request.method == "GET":
+        recite_progress = session.get("recite-progress")
+        if not recite_progress:
+            session["recite-progress"] = 0
+        choice = session.get("recite-progress")
         words = []
         for i in WrongWords.query.all():
             words.append(i)
@@ -396,7 +400,7 @@ def wrong_words_recite():
             is_failure = True
             word = failure[choice]
         if data:
-            if data == word.english:
+            if data.upper() == word.english.upper():
                 if form_failure:
                     failure.remove(word)
                 return render_template(
