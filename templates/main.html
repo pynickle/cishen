@@ -67,6 +67,7 @@
             </div>
         </div>
     </nav>
+    <!--
     <h1 class="title">词神</h1>
     <button class="button is-link is-outlined is-rounded" onclick="window.location='add-new-word'">新单词</button>
     <button class="button is-link is-outlined is-rounded" onclick="window.location='recite-words'">背单词</button>
@@ -75,6 +76,21 @@
     <button class="button is-link is-outlined is-rounded" onclick="window.location='wrong-words'">错题库</button>
     <button class="button is-link is-outlined is-rounded" onclick="window.location='word-books'">词书</button>
     <button class="button is-link is-outlined is-rounded" onclick="window.location='settings'">设置</button>
+    -->
+    <div class="box" id="box-one">
+        <div class="introduction">
+            <h1 class="intro">词神，一个专注于<br>背单词的网站</h1>
+            <div class="btn">
+                <button class="button-1 button is-link is-outlined is-rounded"
+                onclick="window.location='/word-books'">词书</button>
+                <button class="button-2 button is-link is-outlined is-rounded"
+                onclick="window.location='/recite-words'">开始背单词</button>
+            </div>
+        </div>
+        <div class="logo">
+            <img class="" src="{{ url_for('static', filename='favicon.ico') }}">
+        </div>
+    </div>
 </body>
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='main.js') }}"></script>
