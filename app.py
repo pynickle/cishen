@@ -11,7 +11,7 @@ import threading
 import queue
 import requests
 
-from src import SpiderForm, youdict, hujiang, words_validate
+from src import SpiderForm, youdict, hujiang, words_validate, mail
 
 
 def youdict_spider(threadName, q):
@@ -616,6 +616,7 @@ def five_zero_zero(exception):
 
         The 500 page for this flask application.
     """
+    mail(exception)
     return render_template("500.html")
 
 
