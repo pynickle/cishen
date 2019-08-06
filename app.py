@@ -299,9 +299,11 @@ def search():
     else:
         result = []
         data = request.form.get("data")
-        for i in WrongWords.query.all():
+        for i in Words.query.all():
             sm = difflib.SequenceMatcher(None, i.english, data)
-            if sm.ratio() >= 0.5:
+            search_diff = session.get("search_diff")
+            search_diff = 0.5 if not search_diff else search_diff
+            if sm.ratio() >= search_diff:
                 result.append(i)
         return render_template("search-words/result.html", result=result)
 
@@ -350,9 +352,25 @@ def settings():
         return render_template("/settings/settings.html", words_count=session.get("words_count"),
                                youdictform=youdictform, hujiangform=hujiangform)
     else:
-        session["words_count"] = int(request.form.get("words_count"))
+        search_diff = request.form.get("search_diff")
+        words_count = request.form.get("words_count")
+        try:
+            search_diff = float(search_diff)
+            words_count = int(words_count)
+        except Exception:
+            flash("数值不合法")
+            return redirect("/settings")
+        if search_diff>1 or search_diff<0:
+            flash("查询单词相似度数值不合法！")
+            return redirect("/settings")
+        if words_count<=0 or words_count%1 != 0:
+            flash("每次背诵单词数数值不合法！")
+            return redirect("/settings")
+        session["search_diff"] = search_diff
+        session["words_count"] = words_count
         flash("修改设置成功")
         return render_template("/settings/settings.html", words_count=session.get("words_count"),
+                               search_diff=session.get("search_diff"),
                                youdictform=youdictform, hujiangform=hujiangform)
 
 
@@ -442,7 +460,6 @@ def word_books_download(name):
 @app.route("/add-new-word/hand")
 def hand():
     """
-
     Usage::
 
         The page for add new word by hand. Have a post for add new word
