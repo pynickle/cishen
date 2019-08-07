@@ -10,10 +10,7 @@ test-output.xml
 spider_all.py
 sort.py
 
-youdict_liuji(origin).txt
-youdict_siji(origin).txt
-youdict_zhuansiji(origin).txt
-youdict_zhuanbaji(origin).txt
+youdict_*(origin).txt
 
 application.wsgi
 
