@@ -10,6 +10,7 @@ from werkzeug import secure_filename
 import threading
 import queue
 import requests
+import base64
 
 from src import SpiderForm, youdict, hujiang, words_validate, mail
 
@@ -82,6 +83,7 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.jinja_env.auto_reload = True
 app.config["SEND_FILE_MAX_AGE_DEFAULT"] = timedelta(seconds=1)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days = 365)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///words.sqlite3'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SQLALCHEMY_BINDS"] = {
@@ -130,15 +132,19 @@ def before_first_request():
         Before first request for the application, we need to
         initialize some variables and create the databases.
     """
-    global choice, failure, is_failure
+    global choice, failure, is_failure, first, wrong_word_choice
     global db
 
     choice = 0
     failure = []
     is_failure = False
+    first = True
+    wrong_word_choice=0
 
     session.permanent = True
-    session["recite-progress"] = 0
+    session["search_diff"] = 0.5
+    session["words_count"] = 20
+    session["recite_progress"] = 0
 
     db.create_all()
     db.create_all(bind="wrongwords")
@@ -202,7 +208,7 @@ def new():
         return redirect("see-words")
 
 
-@app.route("/recite-words", methods=["GET", "POST"])
+@app.route("/recite-words")
 def recite():
     """
     Usage::
@@ -210,81 +216,73 @@ def recite():
         The page for recite words in the words database. Accept the first
         get and other post for data transmission.
     """
-    global choice, failure, is_failure
+    global first, choice, failure
+    words = []
+    for i in Words.query.all():
+        words.append([i.english, i.chinese])
 
-    if request.method == "GET":
-        recite_progress = session.get("recite-progress")
-        if not recite_progress:
-            session["recite-progress"] = 0
-        choice = session.get("recite-progress")
-        words = []
-
-        for i in Words.query.all():
-            words.append(i)
-        if words:
-            return render_template(
-                "recite-words/recite.html", words=words, choice=choice, failure=False)
-        else:
-            flash("请先添加单词！")
-            return redirect("/")
+    recite_progress = session.get("recite_progress")
+    if not recite_progress:
+        recite_progress = "0"
     else:
-        words = []
-        for i in Words.query.all():
-            words.append(i)
-        data = request.form.get("data")
-        form_failure = request.form.get("is-failure")
-        word = words[choice]
+        recite_progress = str(recite_progress)
 
-        if is_failure:
-            is_failure = True
-            word = failure[choice]
-        if data:
-            if data.upper() == word.english.upper():
-                if form_failure:
-                    failure.remove(word)
-                return render_template(
-                    "recite-words/result.html", data=data, word=word, status="答对咯！", failure=is_failure)
-            else:
-                failure.append(word)
-                return render_template(
-                    "recite-words/result.html", data=data, word=word, status="答错了！", failure=is_failure)
+    choice = request.args.get("choice")
+    print(choice)
+
+    input_data = request.args.get("input")
+    data = request.args.get("data")
+    wrong = request.args.get("wrong")
+
+    if wrong == "True":
+        wrongword = words[int(choice)-1]
+        failure.append([wrongword[0], wrongword[1]])
+        wrongword = WrongWords(wrongword[0], wrongword[1])
+        db.session.add(wrongword)
+        db.session.commit()
+
+    choice = int(choice)
+
+    if choice >= int(recite_progress) + session.get("words_count") or choice >= len(words):
+        session["recite_progress"] = choice
+        if failure:
+            return redirect("/recite-wrong-words?choice=0")
         else:
-            if form_failure:
-                is_failure = True
-                word = failure[choice]
-                failure.remove(word)
-                if not failure:
-                    choice = 0
-                    is_failure = False
-                    failure = []
-                    flash("复习完成！")
-                    return redirect("/")
+            flash("复习完成！")
+            return redirect("/")
+    word = words[choice]
 
-            choice += 1
-            words_count = 20 if not session.get(
-                "words_count") else session.get("words_count")
-            lst_choice = words_count if not is_failure else len(failure)
+    if input_data and data:
+        return redirect("/recite-words")
+    elif choice != None:
+        return render_template("/recite-words/recite.html", word=word)
 
-            if choice >= len(words) or choice >= lst_choice:
-                session["recite-progress"] = choice
-                choice = 0
-                if not failure:
-                    choice = 0
-                    is_failure = False
-                    failure = []
-                    flash("复习完成！")
-                    return redirect("/")
-                else:
-                    for i in failure:
-                        wrongwords = WrongWords(i.english, i.chinese)
-                    db.session.add(wrongwords)
-                    db.session.commit()
-                    is_failure = True
-                    return render_template(
-                        "recite-words/recite.html", words=failure, choice=choice, failure=True)
-            return render_template(
-                "recite-words/recite.html", words=words, choice=choice)
+@app.route("/recite-wrong-words")
+def recite_words_wrong():
+    global failure
+    wrong_word_choice = int(request.args.get("choice"))
 
+    input_data = request.args.get("input")
+    data = request.args.get("data")
+    wrong = request.args.get("wrong")
+
+    print(wrong_word_choice, wrong, type(wrong))
+
+    if not wrong:
+        pass
+    elif wrong == "False":
+        failure.remove(failure[wrong_word_choice-1])
+    else:
+        failure.append(failure[wrong_word_choice-1])
+
+    if not failure:
+        flash("复习完成！")
+        return redirect("/")
+
+    if input_data and data:
+        return redirect("/recite-wrong-words")
+    elif choice != None:
+        return render_template("/recite-words/recite.html", word=failure[wrong_word_choice], come="wrong")
 
 @app.route("/search-words", methods=["GET", "POST"])
 def search():
@@ -350,6 +348,7 @@ def settings():
     hujiangform = SpiderForm()
     if request.method == "GET":
         return render_template("/settings/settings.html", words_count=session.get("words_count"),
+                               search_diff=session.get("search_diff"),
                                youdictform=youdictform, hujiangform=hujiangform)
     else:
         search_diff = request.form.get("search_diff")
@@ -529,4 +528,4 @@ def favicon():
 
 
 if __name__ == '__main__':
-    app.run(port=33507, debug = True)
+    app.run(port=8080, debug = True)

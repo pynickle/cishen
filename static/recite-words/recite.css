@@ -17,3 +17,15 @@ input{
     margin-top: 25px;
     font-size: 24px;
 }
+.right{
+    display: none; 
+    font-size: 48px;
+    margin: 0 auto;
+    margin-top: 50px;
+}
+.wrong{
+    display: none; 
+    font-size: 48px;
+    margin: 0 auto;
+    margin-top: 50px;
+}

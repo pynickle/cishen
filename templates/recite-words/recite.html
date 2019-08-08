@@ -9,12 +9,18 @@
 </head>
 
 <body>
-    <form action="/recite-words" method="POST" class="form">
-        <p class="chinese">{{ words[choice].chinese }}</p>
-        <input class="input data is-primary is-medium is-rounded" name="data" autocomplete="off" required>
+    <div class="form">
+        <p id="chinese" class="chinese">{{ word[1] }}</p>
+        <input id="input" class="input data is-primary is-medium is-rounded" name="data" autocomplete="off" required>
         <br>
-        <input class="button is-link is-outlined is-rounded is-medium" type="submit">
-    </form>
+        <button class="button is-link is-outlined is-rounded is-medium" id="submit" onclick="submit()">提交</button>
+        <i id="right" class="right fa fa-check"></i>
+        <i id="wrong" class="wrong fa fa-times"></i>
+        <p style="display:none" id="english">{{ word[0] }}</p>
+        {% if come %}
+        <p style="display: none" id="come">recite wrong words</p>
+        {% endif %}
+    </div>
 </body>
-
+<script src="{{ url_for('static', filename='recite-words/recite.js') }}"></script>
 </html>
