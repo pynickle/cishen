@@ -74,7 +74,7 @@
                 <button class="button-1 button is-link is-outlined is-rounded"
                 onclick="window.location='/word-books'">词书</button>
                 <button class="button-2 button is-link is-outlined is-rounded"
-                onclick="window.location='/recite-words?choice={{ session.get(\'recite_progress\') }}'">开始背单词</button>
+                onclick="recite_words()">开始背单词</button>
             </div>
         </div>
         <div class="logo">
@@ -82,6 +82,11 @@
         </div>
     </div>
 </body>
+<script>
+    function recite_words(){
+        window.location="/recite-words?choice={{ session.get('recite_progress') }}"
+    }
+</script>
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='main.js') }}"></script>
 </html>
