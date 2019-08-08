@@ -217,23 +217,26 @@ def recite():
         get and other post for data transmission.
     """
     global first, choice, failure
+
+    # get all words
     words = []
     for i in Words.query.all():
         words.append([i.english, i.chinese])
 
+    #get recite progress to start from here
     recite_progress = session.get("recite_progress")
     if not recite_progress:
         recite_progress = "0"
     else:
         recite_progress = str(recite_progress)
 
+    # get other args from url
     choice = request.args.get("choice")
-    print(choice)
-
     input_data = request.args.get("input")
     data = request.args.get("data")
     wrong = request.args.get("wrong")
 
+    # if you answered wrong, it will add the word to the wrong words database
     if wrong == "True":
         wrongword = words[int(choice)-1]
         failure.append([wrongword[0], wrongword[1]])
@@ -243,6 +246,7 @@ def recite():
 
     choice = int(choice)
 
+    # judge if we have finished the recite
     if choice >= int(recite_progress) + session.get("words_count") or choice >= len(words):
         session["recite_progress"] = choice
         if failure:
@@ -252,6 +256,7 @@ def recite():
             return redirect("/")
     word = words[choice]
 
+    # other situations
     if input_data and data:
         return redirect("/recite-words")
     elif choice != None:
@@ -260,14 +265,14 @@ def recite():
 @app.route("/recite-wrong-words")
 def recite_words_wrong():
     global failure
-    wrong_word_choice = int(request.args.get("choice"))
 
+    # get args from url
+    wrong_word_choice = int(request.args.get("choice"))
     input_data = request.args.get("input")
     data = request.args.get("data")
     wrong = request.args.get("wrong")
 
-    print(wrong_word_choice, wrong, type(wrong))
-
+    # judge if you answered right, if right, remove the word from failure list
     if not wrong:
         pass
     elif wrong == "False":
@@ -275,10 +280,12 @@ def recite_words_wrong():
     else:
         failure.append(failure[wrong_word_choice-1])
 
+    # when failure is empty, it means you finished recite
     if not failure:
         flash("复习完成！")
         return redirect("/")
 
+    # other situations
     if input_data and data:
         return redirect("/recite-wrong-words")
     elif choice != None:

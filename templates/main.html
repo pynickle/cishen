@@ -40,7 +40,7 @@
                     <img src="{{ url_for('static', filename='add-new-word/icon.svg') }}" width="16px" height="16px">
                     &ensp;新单词
                 </a>
-                <a class="navbar-item" href="/recite-words?choice={{ session.get('recite_progress') }}">
+                <a class="navbar-item" onclick="recite_words()">
                     <img src="{{ url_for('static', filename='recite-words/icon.svg') }}" width="16px" height="16px">
                     &ensp;背单词
                 </a>
@@ -84,7 +84,11 @@
 </body>
 <script>
     function recite_words(){
-        window.location="/recite-words?choice={{ session.get('recite_progress') }}"
+        recite_progress = {{ session.get('recite_progress') }}
+        if(!recite_progress){
+            recite_progress = 0
+        }
+        window.location="/recite-words?choice=" + recite_progress
     }
 </script>
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
