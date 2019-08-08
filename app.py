@@ -1,4 +1,3 @@
-from datetime import timedelta
 import difflib
 import os
 
@@ -80,15 +79,8 @@ class SpiderThread(threading.Thread):
 
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
 app.jinja_env.auto_reload = True
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = timedelta(seconds=1)
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days = 365)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///words.sqlite3'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config["SQLALCHEMY_BINDS"] = {
-    'wrongwords': 'sqlite:///wrongwords.sqlite3'
-}
+app.config.from_object("config")
 
 db = SQLAlchemy(app)
 
