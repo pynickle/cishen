@@ -1,5 +1,6 @@
 flask
 flask-sqlalchemy
 flask-wtf
+github-flask
 requests
 gunicorn
