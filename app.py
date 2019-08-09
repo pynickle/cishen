@@ -176,7 +176,6 @@ def main():
         is_login = "true"
         response = github.get('user')
         username = response['name']
-        print(username)
         return render_template('main.html', is_login=is_login, username=username)
     is_login = "false"
     return render_template("main.html", is_login = is_login)
@@ -276,6 +275,10 @@ def recite():
     words = []
     for i in Words.query.all():
         words.append([i.english, i.chinese])
+
+    if not words:
+        flash("请先添加单词！")
+        return redirect("/")
 
     #get recite progress to start from here
     recite_progress = session.get("recite_progress")
