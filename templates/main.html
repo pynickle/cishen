@@ -90,7 +90,7 @@
 <script src="{{ url_for('static', filename='main.js') }}"></script>
 <script>
     function recite_words(){
-        recite_progress = {{ session.get('recite_progress') }}
+        recite_progress = "{{ session.get('recite_progress') }}"
         if(!recite_progress){
             recite_progress = 0
         }
