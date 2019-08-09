@@ -1,15 +1,18 @@
+
+# -*- coding: utf-8 -*-
 import difflib
 import os
 
 from flask import Flask, render_template, request, flash, redirect,\
     get_flashed_messages, session, jsonify, url_for,\
-    send_from_directory, current_app
+    send_from_directory, current_app, g
 from flask_sqlalchemy import SQLAlchemy
+from flask_github import GitHub
 from werkzeug import secure_filename
 import threading
 import queue
 import requests
-import base64
+import traceback
 
 from src import SpiderForm, youdict, hujiang, words_validate, mail
 
@@ -81,8 +84,8 @@ class SpiderThread(threading.Thread):
 app = Flask(__name__)
 app.jinja_env.auto_reload = True
 app.config.from_object("config")
-
 db = SQLAlchemy(app)
+github = GitHub(app)
 
 
 class Words(db.Model):
@@ -115,6 +118,20 @@ class WrongWords(db.Model):
         self.english = english
         self.chinese = chinese
 
+class Users(db.Model):
+    """
+    :attr|param id: id for users
+    :attr|param username: username of github
+    """
+    __bind_key__ = "users"
+    id = db.Column("users_id", db.Integer, primary_key=True)
+    username = db.Column(db.String(100))
+    access_token = db.Column(db.String(200))
+
+    def __init__(self, username, access_token):
+        self.username = username
+        self.access_token = access_token
+
 
 @app.before_first_request
 def before_first_request():
@@ -140,7 +157,13 @@ def before_first_request():
 
     db.create_all()
     db.create_all(bind="wrongwords")
+    db.create_all(bind="users")
 
+@app.before_request
+def before_request():
+    g.user = None
+    if 'users_id' in session:
+        g.user = Users.query.get(session['users_id'])
 
 @app.route("/")
 def main():
@@ -149,8 +172,47 @@ def main():
 
         the index page for cishen application
     """
-    return render_template("main.html")
+    if g.user:
+        is_login = "true"
+        response = github.get('user')
+        username = response['name']
+        print(username)
+        return render_template('main.html', is_login=is_login, username=username)
+    is_login = "false"
+    return render_template("main.html", is_login = is_login)
 
+@app.route('/login/oauth2')
+def login():
+    if session.get('users_id', None) is None:
+        return github.authorize()
+    flash('已经登录！')
+    return redirect("/")
+
+@app.route('/login/oauth2/callback')
+@github.authorized_handler
+def authorized(access_token):
+    traceback.print_exc()
+    if access_token is None:
+        flash('登陆失败！')
+        return redirect("/")
+
+    response = github.get('user', access_token=access_token)
+    username = response['login']  # get username
+    print(username)
+    user = Users.query.filter_by(username=username).first()
+    if user is None:
+        user = Users(username=username, access_token=access_token)
+        db.session.add(user)
+    db.session.commit()
+    session["users_id"] = user.id
+    flash('登录成功！')
+    return redirect("/")
+
+@github.access_token_getter
+def token_getter():
+    user = g.user
+    if user is not None:
+        return user.access_token
 
 @app.route("/see-words", methods=["GET", "POST"])
 def see():

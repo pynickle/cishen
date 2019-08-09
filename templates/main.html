@@ -65,6 +65,9 @@
                     &ensp;设置
                 </a>
             </div>
+            <div class="navbar-end">
+
+            </div>
         </div>
     </nav>
     <div class="box" id="box-one">
@@ -81,7 +84,10 @@
             <img class="" src="{{ url_for('static', filename='favicon.ico') }}">
         </div>
     </div>
+    <button onclick="window.location='/login/oauth2'">登录</button>
 </body>
+<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='main.js') }}"></script>
 <script>
     function recite_words(){
         recite_progress = {{ session.get('recite_progress') }}
@@ -90,7 +96,8 @@
         }
         window.location="/recite-words?choice=" + recite_progress
     }
+    if({{ is_login }}){
+        $(".navbar-end").append("<p>{{ username }}</p>")
+    }
 </script>
-<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
-<script src="{{ url_for('static', filename='main.js') }}"></script>
 </html>
