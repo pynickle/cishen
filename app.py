@@ -126,10 +126,12 @@ class Users(db.Model):
     __bind_key__ = "users"
     id = db.Column("users_id", db.Integer, primary_key=True)
     username = db.Column(db.String(100))
+    password = db.Column(db.String(100))
     access_token = db.Column(db.String(200))
 
-    def __init__(self, username, access_token):
+    def __init__(self, username, password, access_token):
         self.username = username
+        self.password = password
         self.access_token = access_token
 
 
@@ -180,8 +182,44 @@ def main():
     is_login = "false"
     return render_template("main.html", is_login = is_login)
 
-@app.route('/login/oauth2')
+@app.route("/registe")
+def registe():
+    return render_template("registe/registe.html")
+
+@app.route("/registe/normal", methods=["POST"])
+def registe_normal():
+    registe_username = request.form.get("username")
+    registe_password = request.form.get("password")
+    if Users.query.filter_by(username=registe_username).first() is None:
+        flash("用户名已存在！")
+        return redirect("/registe")
+    user = Users(registe_username, registe_password, None)
+    db.session.add(user)
+    db.session.commit()
+    session["users_id"] = user.id
+    flash("注册成功")
+
+@app.route("/login")
 def login():
+    return render_template("login/login.html")
+
+@app.route("/login/normal", methods=["POST"])
+def login_normal():
+    login_username = request.form.get("username")
+    login_password = request.form.get("password")
+    password = Users.query.filter_by(username = login_username).first()
+    if password:
+        password = password.password
+        if password == login_password:
+            flash("登录成功！")
+            return redirect("/")
+        else:
+            flash("用户名或密码错误！")
+    else:
+        flash("用户名或密码错误！")
+
+@app.route('/login/oauth2')
+def login_oauth2():
     if session.get('users_id', None) is None:
         return github.authorize()
     flash('已经登录！')
@@ -189,7 +227,7 @@ def login():
 
 @app.route('/login/oauth2/callback')
 @github.authorized_handler
-def authorized(access_token):
+def oauth2_callback(access_token):
     traceback.print_exc()
     if access_token is None:
         flash('登陆失败！')
@@ -197,10 +235,10 @@ def authorized(access_token):
 
     response = github.get('user', access_token=access_token)
     username = response['login']  # get username
-    print(username)
-    user = Users.query.filter_by(username=username).first()
+    password = response["password"]
+    user = Users.query.filter_by(username=username, password=password).first()
     if user is None:
-        user = Users(username=username, access_token=access_token)
+        user = Users(username=username, password=password, access_token=access_token)
         db.session.add(user)
     db.session.commit()
     session["users_id"] = user.id
@@ -214,7 +252,11 @@ def token_getter():
         return user.access_token
 
 @app.route("/see-words", methods=["GET", "POST"])
-def see():
+def see_words_redirect():
+    return redirect("/see-words/1")
+
+@app.route("/see-words/<page>", methods=["GET", "POST"])
+def see(page):
     """
     Usage::
 
@@ -239,7 +281,8 @@ def see():
             return render_template("see-words/see.html",
                                    words=Words.query.all())
     else:
-        return render_template("see-words/see.html", words=Words.query.all())
+        info = Words.query.paginate(int(page), per_page = 30)
+        return render_template("see-words/see.html", words=info)
 
 
 @app.route("/add-new-word", methods=["GET", "POST"])
