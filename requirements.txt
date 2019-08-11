@@ -2,5 +2,6 @@ flask
 flask-sqlalchemy
 flask-wtf
 github-flask
+psycopg2
 requests
 gunicorn
