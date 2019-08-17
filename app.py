@@ -164,7 +164,7 @@ def before_first_request():
     Usage::
 
         Before first request for the application, we need to
-        initialize some variables and create the databases.
+        initialize some variables.
     """
     global choice, failure, is_failure, first, wrong_word_choice
     global db
