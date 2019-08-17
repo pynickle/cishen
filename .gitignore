@@ -17,3 +17,5 @@ word-books-origin/
 application.wsgi
 
 app.zip
+
+.env

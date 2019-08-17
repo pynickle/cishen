@@ -1,6 +1,7 @@
 
 # -*- coding: utf-8 -*-
 import difflib
+import hashlib
 import os
 
 from flask import Flask, render_template, request, flash, redirect,\
@@ -83,12 +84,6 @@ class SpiderThread(threading.Thread):
 
 app = Flask(__name__)
 app.jinja_env.auto_reload = True
-
-environ = ["DATABASE_URL", "HEROKU_POSTGRESQL_ONYX_URL", "HEROKU_POSTGRESQL_BRONZE_URL", "HEROKU_POSTGRESQL_ORANGE_URL"]
-environ_value = ["postgresql:///words", "postgresql:///wrongwords", "postgresql:///github-users", "postgresql:///admin-users"]
-for i, j in zip(environ, environ_value):
-    if i not in os.environ:
-        os.environ[i] = j
 
 app.config.from_object("config")
 db = SQLAlchemy(app)
@@ -184,7 +179,7 @@ def before_first_request():
 def before_request():
     g.user = None
     if 'users_id' in session:
-        g.user = Users.query.get(session['users_id'])
+        g.user = AdminUsers.query.get(session['users_id'])
 
 @app.route("/")
 def main():
@@ -207,12 +202,15 @@ def registe():
 
 @app.route("/registe/normal", methods=["POST"])
 def registe_normal():
+    md5 = hashlib.md5()
     registe_username = request.form.get("username")
     registe_password = request.form.get("password")
-    if AdminUsers.query.filter_by(username=registe_username, password=registe_password).first() is None:
+    md5.update(registe_password.encode(encoding="utf-8"))
+    registe_password = md5.hexdigest()
+    if AdminUsers.query.filter_by(username=registe_username, password=registe_password).first() is not None:
         flash("用户名已存在！")
         return redirect("/registe")
-    user = AdminUsers(registe_username, registe_password, None)
+    user = AdminUsers(registe_username, registe_password)
     db.session.add(user)
     db.session.commit()
     session["users_id"] = user.id
@@ -225,9 +223,12 @@ def login():
 
 @app.route("/login/normal", methods=["POST"])
 def login_normal():
+    md5 = hashlib.md5()
     login_username = request.form.get("username")
     login_password = request.form.get("password")
-    password = AdminUsers.query.filter_by(username = login_username).first()
+    md5.update(login_password.encode(encoding="utf-8"))
+    login_password = md5.hexdigest()
+    password = AdminUsers.query.filter_by(username = login_username, password = login_password).first()
     if password:
         password = password.password
         if password == login_password:
