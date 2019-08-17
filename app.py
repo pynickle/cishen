@@ -83,6 +83,13 @@ class SpiderThread(threading.Thread):
 
 app = Flask(__name__)
 app.jinja_env.auto_reload = True
+
+environ = ["DATABASE_URL", "HEROKU_POSTGRESQL_ONYX_URL", "HEROKU_POSTGRESQL_BRONZE_URL", "HEROKU_POSTGRESQL_ORANGE_URL"]
+environ_value = ["postgresql:///words", "postgresql:///wrongwords", "postgresql:///github-users", "postgresql:///admin-users"]
+for i, j in zip(environ, environ_value):
+    if i not in os.environ:
+        os.environ[i] = j
+
 app.config.from_object("config")
 db = SQLAlchemy(app)
 github = GitHub(app)
@@ -95,8 +102,8 @@ class Words(db.Model):
     :attr|param chinese: chinese explanation for english words
     """
     id = db.Column("words_id", db.Integer, primary_key=True)
-    english = db.Column(db.String(30))
-    chinese = db.Column(db.String(75))
+    english = db.Column(db.String(50))
+    chinese = db.Column(db.String(200))
 
     def __init__(self, english, chinese):
         self.english = english
@@ -111,28 +118,40 @@ class WrongWords(db.Model):
     """
     __bind_key__ = "wrongwords"
     id = db.Column("wrong_words_id", db.Integer, primary_key=True)
-    english = db.Column(db.String(30))
-    chinese = db.Column(db.String(75))
+    english = db.Column(db.String(50))
+    chinese = db.Column(db.String(200))
 
     def __init__(self, english, chinese):
         self.english = english
         self.chinese = chinese
 
-class Users(db.Model):
+class GithubUsers(db.Model):
     """
     :attr|param id: id for users
     :attr|param username: username of github
     """
-    __bind_key__ = "users"
-    id = db.Column("users_id", db.Integer, primary_key=True)
+    __bind_key__ = "github-users"
+    id = db.Column("github-users_id", db.Integer, primary_key=True)
     username = db.Column(db.String(100))
-    password = db.Column(db.String(100))
     access_token = db.Column(db.String(200))
 
     def __init__(self, username, password, access_token):
         self.username = username
-        self.password = password
         self.access_token = access_token
+
+class AdminUsers(db.Model):
+    """
+    :attr|param id: id for users
+    :attr|param username: username of github
+    """
+    __bind_key__ = "admin-users"
+    id = db.Column("admin-users_id", db.Integer, primary_key=True)
+    username = db.Column(db.String(100))
+    password = db.Column(db.String(100))
+
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
 
 
 @app.before_first_request
@@ -159,7 +178,8 @@ def before_first_request():
 
     db.create_all()
     db.create_all(bind="wrongwords")
-    db.create_all(bind="users")
+    db.create_all(bind="github-users")
+    db.create_all(bind="admin-users")
 
 @app.before_request
 def before_request():
@@ -190,14 +210,15 @@ def registe():
 def registe_normal():
     registe_username = request.form.get("username")
     registe_password = request.form.get("password")
-    if Users.query.filter_by(username=registe_username).first() is None:
+    if AdminUsers.query.filter_by(username=registe_username, password=registe_password).first() is None:
         flash("用户名已存在！")
         return redirect("/registe")
-    user = Users(registe_username, registe_password, None)
+    user = AdminUsers(registe_username, registe_password, None)
     db.session.add(user)
     db.session.commit()
     session["users_id"] = user.id
     flash("注册成功")
+    return redirect("/")
 
 @app.route("/login")
 def login():
@@ -207,7 +228,7 @@ def login():
 def login_normal():
     login_username = request.form.get("username")
     login_password = request.form.get("password")
-    password = Users.query.filter_by(username = login_username).first()
+    password = AdminUsers.query.filter_by(username = login_username).first()
     if password:
         password = password.password
         if password == login_password:
@@ -235,10 +256,9 @@ def oauth2_callback(access_token):
 
     response = github.get('user', access_token=access_token)
     username = response['login']  # get username
-    password = response["password"]
-    user = Users.query.filter_by(username=username, password=password).first()
+    user = GithubUsers.query.filter_by(username=username).first()
     if user is None:
-        user = Users(username=username, password=password, access_token=access_token)
+        user = GithubUsers(username=username, access_token=access_token)
         db.session.add(user)
     db.session.commit()
     session["users_id"] = user.id
