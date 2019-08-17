@@ -22,6 +22,6 @@ SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_BINDS = {
     'wrongwords': os.environ['HEROKU_POSTGRESQL_ONYX_URL'],
-    "github-users": os.environ['HEROKU_POSTGRESQL_BRONZE_URL'],
-    "admin-users": os.environ['HEROKU_POSTGRESQL_ORANGE_URL']
+    "github-users": os.environ['HEROKU_POSTGRESQL_SLIVER_URL'],
+    "admin-users": os.environ['HEROKU_POSTGRESQL_AMBER_URL']
 }
