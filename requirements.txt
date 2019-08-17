@@ -5,3 +5,4 @@ github-flask
 psycopg2
 requests
 gunicorn
+python-dotenv
