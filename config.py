@@ -18,10 +18,10 @@ SQLALCHEMY_BINDS = {
     "users": "sqlite:///users.sqlite3"
 }
 """
-SQLALCHEMY_DATABASE_URI = "postgres://imbfeplizqnifh:fe5383bed6e0433eec1894e94170341d8df048d2f3f2e0543ce1a19d5a7b04c0@ec2-54-83-36-37.compute-1.amazonaws.com:5432/d82e3li2tn8df0"
+SQLALCHEMY_DATABASE_URI = "postgres://duxozyvlrdpiby:498cde3f5512141a7a520935e5045d553cfc9e5fbe1f0bb5e87216412dafce8d@ec2-174-129-240-67.compute-1.amazonaws.com:5432/dc6jn5i3h0l9vs"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_BINDS = {
-    'wrongwords': "postgres://rmoupqnsllwcwb:4c3049a0bc7ddd7feb0bf4427c0df7bd17da25e319136287db8d748a38f20834@ec2-50-19-114-27.compute-1.amazonaws.com:5432/dc52vkcmqrgohg",
-    "github-users": "postgres://dcsjeaileydpus:e180afd4b693d93db0ab6d36df480a30d60f052ed1ea0e9f9a6258cdb9810856@ec2-184-72-238-22.compute-1.amazonaws.com:5432/dctr8f4c3hj0eg",
-    "admin-users": "postgres://imbfeplizqnifh:fe5383bed6e0433eec1894e94170341d8df048d2f3f2e0543ce1a19d5a7b04c0@ec2-54-83-36-37.compute-1.amazonaws.com:5432/d82e3li2tn8df0"
+    'wrongwords': "postgres://orekhscplkyxys:bc834760315438a684a3f0183799f337098a27a8d2112b09979471e4f2c583af@ec2-174-129-240-67.compute-1.amazonaws.com:5432/d1ui0dg4kkb9n7",
+    "github-users": "postgres://xruniacvftyjcu:24ed9fe80e22832a89cfd62e63f756346ce0b8783753e72c3731142f12f2893a@ec2-50-19-114-27.compute-1.amazonaws.com:5432/d4hrri9ea2p525",
+    "admin-users": "postgres://ipyejdahvfvdar:72ef8bc88376f5a84e8d83345bc0116b8bfeef34df04518f0180c6397e52e1d0@ec2-174-129-240-67.compute-1.amazonaws.com:5432/de0t54s95v8kkn"
 }
