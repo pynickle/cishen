@@ -102,7 +102,7 @@ class Words(db.Model):
     :attr|param chinese: chinese explanation for english words
     """
     id = db.Column("words_id", db.Integer, primary_key=True)
-    english = db.Column(db.String(50))
+    english = db.Column(db.String(75))
     chinese = db.Column(db.String(200))
 
     def __init__(self, english, chinese):
@@ -118,7 +118,7 @@ class WrongWords(db.Model):
     """
     __bind_key__ = "wrongwords"
     id = db.Column("wrong_words_id", db.Integer, primary_key=True)
-    english = db.Column(db.String(50))
+    english = db.Column(db.String(75))
     chinese = db.Column(db.String(200))
 
     def __init__(self, english, chinese):
