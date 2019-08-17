@@ -3,20 +3,28 @@
 
 <head>
     <meta charset="utf-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bulma.min.css') }}" type="text/css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='login/login.css') }}" type="text/css">
 </head>
 
 <body>
-    <h1>登录</h1>
-    <form action="/login/normal" method="POST">
+    <h1 class="title">登录</h1>
+    <form action="/login/normal" method="POST" class="admin-login">
         <p>用户名</p>
-        <input type="text" name="username" required>
+        <input class="input is-rounded" type="text" name="username" required>
         <br>
         <p>密码</p>
-        <input type="password" name="password" required>
+        <input class="input is-rounded" type="password" name="password" required>
         <br>
-        <input type="submit" value="登录">
+        <input class="button is-link is-outlined is-rounded" type="submit" value="登录">
     </form>
-    <button onclick="window.location='/login/oauth2'">GitHub登录</button>
+    <div class="others">
+        <p class="third-party">-- 第三方账号登录 --</p>
+        <div class="github">
+            <img id="third-party-image" class="image is-32x32 is-rounded"
+                src="{{ url_for('static', filename='login/github.jpg') }}" onclick="window.location='/login/oauth2'">
+        </div>
+    </div>
 </body>
 
 </html>

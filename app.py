@@ -3,6 +3,8 @@
 import difflib
 import hashlib
 import os
+import threading
+import queue
 
 from flask import Flask, render_template, request, flash, redirect,\
     get_flashed_messages, session, jsonify, url_for,\
@@ -10,13 +12,14 @@ from flask import Flask, render_template, request, flash, redirect,\
 from flask_sqlalchemy import SQLAlchemy
 from flask_github import GitHub
 from werkzeug import secure_filename
-import threading
-import queue
 import requests
+from dotenv import find_dotenv,load_dotenv
+
 import traceback
 
 from src import SpiderForm, youdict, hujiang, words_validate, mail
 
+load_dotenv(find_dotenv())
 
 def youdict_spider(threadName, q):
     """
@@ -179,7 +182,9 @@ def before_first_request():
 def before_request():
     g.user = None
     if 'users_id' in session:
-        g.user = AdminUsers.query.get(session['users_id'])
+        g.user = GithubUsers.query.get(session['users_id'])
+    elif 'admin_users_id' in session:
+        g.user = AdminUsers.query.get(session["admin_users_id"])
 
 @app.route("/")
 def main():
@@ -190,8 +195,11 @@ def main():
     """
     if g.user:
         is_login = "true"
-        response = github.get('user')
-        username = response['name']
+        if isinstance(g.user, GithubUsers):
+            response = github.get('user')
+            username = response['name']
+        elif isinstance(g.user, AdminUsers):
+            username = g.user.username
         return render_template('main.html', is_login=is_login, username=username)
     is_login = "false"
     return render_template("main.html", is_login = is_login)
@@ -213,7 +221,6 @@ def registe_normal():
     user = AdminUsers(registe_username, registe_password)
     db.session.add(user)
     db.session.commit()
-    session["users_id"] = user.id
     flash("注册成功")
     return redirect("/")
 
@@ -228,11 +235,12 @@ def login_normal():
     login_password = request.form.get("password")
     md5.update(login_password.encode(encoding="utf-8"))
     login_password = md5.hexdigest()
-    password = AdminUsers.query.filter_by(username = login_username, password = login_password).first()
-    if password:
-        password = password.password
+    user = AdminUsers.query.filter_by(username = login_username, password = login_password).first()
+    if user:
+        password = user.password
         if password == login_password:
             flash("登录成功！")
+            session["admin_users_id"] = user.id
             return redirect("/")
         else:
             flash("用户名或密码错误！")
@@ -249,7 +257,6 @@ def login_oauth2():
 @app.route('/login/oauth2/callback')
 @github.authorized_handler
 def oauth2_callback(access_token):
-    traceback.print_exc()
     if access_token is None:
         flash('登陆失败！')
         return redirect("/")
