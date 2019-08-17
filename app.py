@@ -153,11 +153,6 @@ class AdminUsers(db.Model):
         self.username = username
         self.password = password
 
-db.create_all()
-db.create_all(bind="wrongwords")
-db.create_all(bind="github-users")
-db.create_all(bind="admin-users")
-
 @app.before_first_request
 def before_first_request():
     """
@@ -179,6 +174,11 @@ def before_first_request():
     session["search_diff"] = 0.5
     session["words_count"] = 20
     session["recite_progress"] = 0
+
+    db.create_all()
+    db.create_all(bind="wrongwords")
+    db.create_all(bind="github-users")
+    db.create_all(bind="admin-users")
 
 @app.before_request
 def before_request():
