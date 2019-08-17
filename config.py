@@ -18,10 +18,10 @@ SQLALCHEMY_BINDS = {
     "users": "sqlite:///users.sqlite3"
 }
 """
-SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
+SQLALCHEMY_DATABASE_URI = "postgres://imbfeplizqnifh:fe5383bed6e0433eec1894e94170341d8df048d2f3f2e0543ce1a19d5a7b04c0@ec2-54-83-36-37.compute-1.amazonaws.com:5432/d82e3li2tn8df0"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_BINDS = {
-    'wrongwords': os.environ['HEROKU_POSTGRESQL_ONYX_URL'],
-    "github-users": os.environ['HEROKU_POSTGRESQL_SLIVER_URL'],
-    "admin-users": os.environ['HEROKU_POSTGRESQL_AMBER_URL']
+    'wrongwords': "postgres://rmoupqnsllwcwb:4c3049a0bc7ddd7feb0bf4427c0df7bd17da25e319136287db8d748a38f20834@ec2-50-19-114-27.compute-1.amazonaws.com:5432/dc52vkcmqrgohg",
+    "github-users": "postgres://dcsjeaileydpus:e180afd4b693d93db0ab6d36df480a30d60f052ed1ea0e9f9a6258cdb9810856@ec2-184-72-238-22.compute-1.amazonaws.com:5432/dctr8f4c3hj0eg",
+    "admin-users": "postgres://imbfeplizqnifh:fe5383bed6e0433eec1894e94170341d8df048d2f3f2e0543ce1a19d5a7b04c0@ec2-54-83-36-37.compute-1.amazonaws.com:5432/d82e3li2tn8df0"
 }
