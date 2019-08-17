@@ -133,7 +133,7 @@ class GithubUsers(db.Model):
     username = db.Column(db.String(100))
     access_token = db.Column(db.String(200))
 
-    def __init__(self, username, password, access_token):
+    def __init__(self, username, access_token):
         self.username = username
         self.access_token = access_token
 
