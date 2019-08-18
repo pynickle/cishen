@@ -110,17 +110,18 @@
 <script src="{{ url_for('static', filename='main.js') }}"></script>
 <script>
     console.log("{{ session.get('recite-progress') }}")
-    if("{{ session.get('today-progress') }}"=="None"){
+    if("{{ session.get('today_progress') }}"=="None"){
         $("#today-progress").html("你今天还没背单词哦");
     }
     function recite_words() {
         recite_progress = "{{ session.get('recite_progress') }}"
+        console.log(recite_progress)
         if (recite_progress=="None") {
             recite_progress = 0
         }
-        window.location = "/recite-words?choice=" + recite_progress
+        window.location = "/before-recite-words?choice=" + recite_progress
     }
-    if ({{ is_login }}) {
+    if ("{{ is_login }}" == "True") {
         $(".navbar-end").append("<p>{{ username }}</p>")
     }
 </script>

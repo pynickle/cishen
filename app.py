@@ -201,14 +201,14 @@ def main():
         the index page for cishen application
     """
     if g.user:
-        is_login = "true"
+        is_login = True
         if isinstance(g.user, GithubUsers):
             response = github.get('user')
             username = response['name']
         elif isinstance(g.user, AdminUsers):
             username = g.user.username
         return render_template('main.html', is_login=is_login, username=username)
-    is_login = "false"
+    is_login = False
     return render_template("main.html", is_login=is_login)
 
 
@@ -297,6 +297,13 @@ def token_getter():
 def see_words_redirect():
     return redirect("/see-words/1")
 
+@app.route("/see-words/delete-all", methods=["POST"])
+def see_words_delete_all():
+    words = Words.query.all()
+    for i in words:
+        db.session.delete(i)
+    db.session.commit()
+    return redirect("/see-words")
 
 @app.route("/see-words/<page>", methods=["GET", "POST"])
 def see(page):
@@ -307,22 +314,13 @@ def see(page):
         some words or all words.
     """
     if request.method == "POST":
-        delete_all = request.form.get("delete-all")
-        print(delete_all)
-        if delete_all:
-            words = Words.query.all()
-            for i in words:
-                db.session.delete(i)
-            db.session.commit()
-            return redirect("/see-words")
-        else:
-            english = request.form.get("english")
-            chinese = request.form.get("chinese")
-            u = Words.query.filter_by(english=english, chinese=chinese).first()
-            db.session.delete(u)
-            db.session.commit()
-            return render_template("see-words/see.html",
-                                   words=Words.query.all())
+        english = request.form.get("english")
+        chinese = request.form.get("chinese")
+        u = Words.query.filter_by(english=english, chinese=chinese).first()
+        db.session.delete(u)
+        db.session.commit()
+        return render_template("see-words/see.html",
+                                words=Words.query.all())
     else:
         info = Words.query.paginate(int(page), per_page=30)
         return render_template("see-words/see.html", words=info)
@@ -346,6 +344,12 @@ def new():
         db.session.commit()
         return redirect("see-words")
 
+@app.route("/before-recite-words")
+def before_recite_words():
+    global failure
+    failure = []
+    choice = request.args.get("choice")
+    return redirect("recite-words?choice=" + choice)
 
 @app.route("/recite-words")
 def recite():
@@ -362,7 +366,7 @@ def recite():
     if today and datetime.date.today == today:
         pass
     else:
-        session["today"] = datetime.date.today()
+        session["today_progress"] = datetime.date.today()
 
     # get recite progress to start from here
     recite_progress = session.get("recite_progress")
@@ -379,9 +383,9 @@ def recite():
 
     # if you answered wrong, it will add the word to the wrong words database
     if wrong == "True":
-        wrongword = words[int(choice) - 1]
-        failure.append([wrongword[0], wrongword[1]])
-        wrongword = WrongWords(wrongword[0], wrongword[1])
+        wrongword = Words.query.get(int(choice))
+        failure.append([wrongword.english, wrongword.chinese])
+        wrongword = WrongWords(wrongword.english, wrongword.chinese)
         db.session.add(wrongword)
         db.session.commit()
 
@@ -398,7 +402,7 @@ def recite():
         else:
             flash("复习完成！")
             return redirect("/")
-
+    word = [word.english, word.chinese]
     # other situations
     if input_data and data:
         return redirect("/recite-words")
@@ -487,6 +491,14 @@ def wrong_words():
         return render_template("wrong-words/wrong.html",
                                words=WrongWords.query.all())
 
+@app.route("/wrong-words/delete-all", methods=["POST"])
+def wrong_words_delete_all():
+    words = WrongWords.query.all()
+    for i in words:
+        db.session.delete(i)
+    db.session.commit()
+    flash("删除完成！")
+    return redirect("/wrong-words")
 
 @app.route("/settings", methods=["GET", "POST"])
 def settings():

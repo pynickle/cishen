@@ -10,13 +10,13 @@
 
 <body>
     <div class="form">
-        <p id="chinese" class="chinese">{{ word.chinese }}</p>
+        <p id="chinese" class="chinese">{{ word[1] }}</p>
         <input id="input" class="input data is-primary is-medium is-rounded" name="data" autocomplete="off" required>
         <br>
         <button class="button is-link is-outlined is-rounded is-medium" id="submit" onclick="submit()">提交</button>
         <i id="right" class="right fa fa-check"></i>
         <i id="wrong" class="wrong fa fa-times"></i>
-        <p style="display:none" id="english">{{ word.english }}</p>
+        <p style="display:none" id="english">{{ word[0] }}</p>
         {% if come %}
         <p style="display: none" id="come">recite wrong words</p>
         {% endif %}
