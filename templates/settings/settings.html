@@ -21,6 +21,7 @@
     </article>
     {% endfor %}
     <h1>设置</h1>
+    <button class="button is-link is-outlined is-rounded return-index" onclick="window.location='/'">返回首页</button>
     <form action="/settings" method="POST">
         <p>每次背诵单词数</p>
         <input type="number" name="words_count" value="{{ words_count }}">

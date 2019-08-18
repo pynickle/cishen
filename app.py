@@ -1,25 +1,26 @@
-
 # -*- coding: utf-8 -*-
 import difflib
 import hashlib
 import os
 import threading
+import datetime
 import queue
 
-from flask import Flask, render_template, request, flash, redirect,\
-    get_flashed_messages, session, jsonify, url_for,\
+from flask import Flask, render_template, request, flash, redirect, \
+    get_flashed_messages, session, jsonify, url_for, \
     send_from_directory, current_app, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_github import GitHub
 from werkzeug import secure_filename
 import requests
-from dotenv import find_dotenv,load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 import traceback
 
 from src import SpiderForm, youdict, hujiang, words_validate, mail
 
 load_dotenv(find_dotenv())
+
 
 def youdict_spider(threadName, q):
     """
@@ -36,7 +37,7 @@ def youdict_spider(threadName, q):
         try:
             db.session.add(word)
             db.session.commit()
-        except BaseException:
+        except Exception:
             pass
 
 
@@ -66,6 +67,7 @@ class SpiderThread(threading.Thread):
 
         run the words scrapy program with threading and queue
     """
+
     def __init__(self, name, q, website):
         threading.Thread.__init__(self)
         self.name = name
@@ -80,7 +82,7 @@ class SpiderThread(threading.Thread):
                     youdict_spider(self.name, self.q)
                 elif self.website == "hujiang":
                     hujiang_spider(self.name, self.q)
-            except BaseException:
+            except Exception:
                 break
         print("Exiting" + self.name)
 
@@ -123,6 +125,7 @@ class WrongWords(db.Model):
         self.english = english
         self.chinese = chinese
 
+
 class GithubUsers(db.Model):
     """
     :attr|param id: id for users
@@ -137,6 +140,7 @@ class GithubUsers(db.Model):
         self.username = username
         self.access_token = access_token
 
+
 class AdminUsers(db.Model):
     """
     :attr|param id: id for users
@@ -150,6 +154,7 @@ class AdminUsers(db.Model):
     def __init__(self, username, password):
         self.username = username
         self.password = password
+
 
 @app.before_first_request
 def before_first_request():
@@ -166,7 +171,7 @@ def before_first_request():
     failure = []
     is_failure = False
     first = True
-    wrong_word_choice=0
+    wrong_word_choice = 0
 
     session.permanent = True
     session["search_diff"] = 0.5
@@ -178,6 +183,7 @@ def before_first_request():
     db.create_all(bind="github-users")
     db.create_all(bind="admin-users")
 
+
 @app.before_request
 def before_request():
     g.user = None
@@ -185,6 +191,7 @@ def before_request():
         g.user = GithubUsers.query.get(session['users_id'])
     elif 'admin_users_id' in session:
         g.user = AdminUsers.query.get(session["admin_users_id"])
+
 
 @app.route("/")
 def main():
@@ -202,11 +209,13 @@ def main():
             username = g.user.username
         return render_template('main.html', is_login=is_login, username=username)
     is_login = "false"
-    return render_template("main.html", is_login = is_login)
+    return render_template("main.html", is_login=is_login)
+
 
 @app.route("/registe")
 def registe():
     return render_template("registe/registe.html")
+
 
 @app.route("/registe/normal", methods=["POST"])
 def registe_normal():
@@ -224,9 +233,11 @@ def registe_normal():
     flash("注册成功")
     return redirect("/")
 
+
 @app.route("/login")
 def login():
     return render_template("login/login.html")
+
 
 @app.route("/login/normal", methods=["POST"])
 def login_normal():
@@ -235,7 +246,7 @@ def login_normal():
     login_password = request.form.get("password")
     md5.update(login_password.encode(encoding="utf-8"))
     login_password = md5.hexdigest()
-    user = AdminUsers.query.filter_by(username = login_username, password = login_password).first()
+    user = AdminUsers.query.filter_by(username=login_username, password=login_password).first()
     if user:
         password = user.password
         if password == login_password:
@@ -247,12 +258,14 @@ def login_normal():
     else:
         flash("用户名或密码错误！")
 
+
 @app.route('/login/oauth2')
 def login_oauth2():
     if session.get('users_id', None) is None:
         return github.authorize()
     flash('已经登录！')
     return redirect("/")
+
 
 @app.route('/login/oauth2/callback')
 @github.authorized_handler
@@ -272,15 +285,18 @@ def oauth2_callback(access_token):
     flash('登录成功！')
     return redirect("/")
 
+
 @github.access_token_getter
 def token_getter():
     user = g.user
     if user is not None:
         return user.access_token
 
+
 @app.route("/see-words", methods=["GET", "POST"])
 def see_words_redirect():
     return redirect("/see-words/1")
+
 
 @app.route("/see-words/<page>", methods=["GET", "POST"])
 def see(page):
@@ -308,7 +324,7 @@ def see(page):
             return render_template("see-words/see.html",
                                    words=Words.query.all())
     else:
-        info = Words.query.paginate(int(page), per_page = 30)
+        info = Words.query.paginate(int(page), per_page=30)
         return render_template("see-words/see.html", words=info)
 
 
@@ -341,16 +357,14 @@ def recite():
     """
     global first, choice, failure
 
-    # get all words
-    words = []
-    for i in Words.query.all():
-        words.append([i.english, i.chinese])
+    today = session.get("today-progress")
 
-    if not words:
-        flash("请先添加单词！")
-        return redirect("/")
+    if today and datetime.date.today == today:
+        pass
+    else:
+        session["today"] = datetime.date.today()
 
-    #get recite progress to start from here
+    # get recite progress to start from here
     recite_progress = session.get("recite_progress")
     if not recite_progress:
         recite_progress = "0"
@@ -365,29 +379,32 @@ def recite():
 
     # if you answered wrong, it will add the word to the wrong words database
     if wrong == "True":
-        wrongword = words[int(choice)-1]
+        wrongword = words[int(choice) - 1]
         failure.append([wrongword[0], wrongword[1]])
         wrongword = WrongWords(wrongword[0], wrongword[1])
         db.session.add(wrongword)
         db.session.commit()
 
     choice = int(choice)
+    word = Words.query.get(choice+1)
 
+    words_count = session.get("words_count")
+    words_count = words_count if words_count else 20
     # judge if we have finished the recite
-    if choice >= int(recite_progress) + session.get("words_count") or choice >= len(words):
+    if choice >= int(recite_progress) + words_count or not word:
         session["recite_progress"] = choice
         if failure:
             return redirect("/recite-wrong-words?choice=0")
         else:
             flash("复习完成！")
             return redirect("/")
-    word = words[choice]
 
     # other situations
     if input_data and data:
         return redirect("/recite-words")
     elif choice != None:
         return render_template("/recite-words/recite.html", word=word)
+
 
 @app.route("/recite-wrong-words")
 def recite_words_wrong():
@@ -403,9 +420,9 @@ def recite_words_wrong():
     if not wrong:
         pass
     elif wrong == "False":
-        failure.remove(failure[wrong_word_choice-1])
+        failure.remove(failure[wrong_word_choice - 1])
     else:
-        failure.append(failure[wrong_word_choice-1])
+        failure.append(failure[wrong_word_choice - 1])
 
     # when failure is empty, it means you finished recite
     if not failure:
@@ -417,6 +434,7 @@ def recite_words_wrong():
         return redirect("/recite-wrong-words")
     elif choice != None:
         return render_template("/recite-words/recite.html", word=failure[wrong_word_choice], come="wrong")
+
 
 @app.route("/search-words", methods=["GET", "POST"])
 def search():
@@ -493,10 +511,10 @@ def settings():
         except Exception:
             flash("数值不合法")
             return redirect("/settings")
-        if search_diff>1 or search_diff<0:
+        if search_diff > 1 or search_diff < 0:
             flash("查询单词相似度数值不合法！")
             return redirect("/settings")
-        if words_count<=0 or words_count%1 != 0:
+        if words_count <= 0 or words_count % 1 != 0:
             flash("每次背诵单词数数值不合法！")
             return redirect("/settings")
         session["search_diff"] = search_diff
@@ -662,4 +680,4 @@ def favicon():
 
 
 if __name__ == '__main__':
-    app.run(port=8080, debug = True)
+    app.run(port=8080, debug=True)
