@@ -222,6 +222,9 @@ def registe_normal():
     md5 = hashlib.md5()
     registe_username = request.form.get("username")
     registe_password = request.form.get("password")
+    if not len(registe_password) > 8 or not registe_username:
+        flash("数值不合法！")
+        return redirect("/registe")
     md5.update(registe_password.encode(encoding="utf-8"))
     registe_password = md5.hexdigest()
     if AdminUsers.query.filter_by(username=registe_username, password=registe_password).first() is not None:
@@ -252,6 +255,7 @@ def login_normal():
         if password == login_password:
             flash("登录成功！")
             session["admin_users_id"] = user.id
+            g.user = user
             return redirect("/")
         else:
             flash("用户名或密码错误！")
