@@ -8,6 +8,18 @@
 </head>
 
 <body>
+    {% for msg in get_flashed_messages() %}
+    <article class="message is-info" id="info">
+        <div class="message-header">
+            <p>消息</p>
+            <button class="delete" aria-label="delete"
+                onclick="document.getElementById('info').style.display = 'none'"></button>
+        </div>
+        <div class="message-body">
+            {{ msg }}
+        </div>
+    </article>
+    {% endfor %}
     <h1 class="title">注册</h1>
     <form action="/registe/normal" method="POST" class="admin-login">
         <p>用户名</p>
