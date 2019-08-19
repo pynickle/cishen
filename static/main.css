@@ -58,3 +58,8 @@ button {
     float: left;
     margin-left: 3%;
 }
+.today-progress{
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    margin: 5px;
+}
