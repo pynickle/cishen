@@ -26,19 +26,3 @@ def client():
 def test_index(client):
     rv = client.get('/')
     assert '词神' in rv.data.decode(encoding="utf-8")
-
-
-def test_add_new_word(client):
-    rv = client.post("/add-new-word", data=dict(
-        data="book n. 书"
-    ), follow_redirects=True)
-    assert 'book' in rv.data.decode(encoding="utf-8")
-    assert 'n.' in rv.data.decode(encoding="utf-8")
-    assert '书' in rv.data.decode(encoding="utf-8")
-
-
-def test_recite_word(client):
-    rv = client.post("/recite-words", data=dict(
-        data="book"
-    ), follow_redirects=True)
-    assert '答对咯！' in rv.data.decode(encoding="utf-8")
