@@ -96,9 +96,7 @@
             <h1 class="intro">词神，一个专注于<br>背单词的网站</h1>
             <div class="btn">
                 <p id="today-progress"></p>
-                <button class="button-1 button is-link is-outlined is-rounded"
-                    onclick="window.location='/word-books'">词书</button>
-                <button class="button-2 button is-link is-outlined is-rounded" onclick="recite_words()">开始背单词</button>
+                <button class="button-1 button is-link is-outlined is-rounded" onclick="recite_words()">开始背单词</button>
             </div>
         </div>
         <div class="logo">
@@ -109,9 +107,12 @@
 <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='main.js') }}"></script>
 <script>
-    console.log("{{ session.get('recite-progress') }}")
+    console.log("{{ session.get('recite_progress') }}")
     if("{{ session.get('today_progress') }}"=="None"){
         $("#today-progress").html("你今天还没背单词哦");
+        $("#today-progress").css("color", "rgba(0, 0, 0, 0.4)")
+        $("#today-progress").css("text-align", "center")
+        $("#today-progress").css("margin", "10px")
     }
     function recite_words() {
         recite_progress = "{{ session.get('recite_progress') }}"

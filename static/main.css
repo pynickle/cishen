@@ -47,19 +47,5 @@ button {
 .btn{
     margin-top: 10%;
     align-items: center;
-    margin-left: auto;
-    margin-right: auto;
-}
-.button-1{
-    float: left;
-    margin-left: 30%;
-}
-.button-2{
-    float: left;
-    margin-left: 3%;
-}
-.today-progress{
-    color: rgba(255, 255, 255, 0.5);
     text-align: center;
-    margin: 5px;
 }
